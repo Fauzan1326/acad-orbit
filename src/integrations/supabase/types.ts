@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_config: {
+        Row: {
+          academic_year: string
+          active_term: string
+          created_at: string
+          end_date: string | null
+          id: string
+          start_date: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          academic_year?: string
+          active_term?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          start_date?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          academic_year?: string
+          active_term?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          start_date?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -36,6 +69,165 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      rooms: {
+        Row: {
+          code: number
+          created_at: string
+          id: string
+          name: string
+          room_type: string
+          user_id: string
+        }
+        Insert: {
+          code: number
+          created_at?: string
+          id?: string
+          name: string
+          room_type?: string
+          user_id: string
+        }
+        Update: {
+          code?: number
+          created_at?: string
+          id?: string
+          name?: string
+          room_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      semesters: {
+        Row: {
+          code: number
+          created_at: string
+          id: string
+          name: string
+          parity: string
+          user_id: string
+        }
+        Insert: {
+          code: number
+          created_at?: string
+          id?: string
+          name: string
+          parity: string
+          user_id: string
+        }
+        Update: {
+          code?: number
+          created_at?: string
+          id?: string
+          name?: string
+          parity?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subjects: {
+        Row: {
+          code: number
+          created_at: string
+          id: string
+          name: string
+          short_name: string
+          user_id: string
+        }
+        Insert: {
+          code: number
+          created_at?: string
+          id?: string
+          name: string
+          short_name: string
+          user_id: string
+        }
+        Update: {
+          code?: number
+          created_at?: string
+          id?: string
+          name?: string
+          short_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      teachers: {
+        Row: {
+          code: number
+          created_at: string
+          id: string
+          name: string
+          short_name: string
+          user_id: string
+        }
+        Insert: {
+          code: number
+          created_at?: string
+          id?: string
+          name: string
+          short_name: string
+          user_id: string
+        }
+        Update: {
+          code?: number
+          created_at?: string
+          id?: string
+          name?: string
+          short_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      timetable_records: {
+        Row: {
+          batch: string
+          created_at: string
+          day: string
+          duration: number
+          id: string
+          notes: string | null
+          room_code: number
+          semester_code: number
+          slot: string
+          subject_code: number
+          teacher_code: number
+          type_code: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          batch?: string
+          created_at?: string
+          day: string
+          duration?: number
+          id?: string
+          notes?: string | null
+          room_code: number
+          semester_code: number
+          slot: string
+          subject_code: number
+          teacher_code: number
+          type_code?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          batch?: string
+          created_at?: string
+          day?: string
+          duration?: number
+          id?: string
+          notes?: string | null
+          room_code?: number
+          semester_code?: number
+          slot?: string
+          subject_code?: number
+          teacher_code?: number
+          type_code?: number
           updated_at?: string
           user_id?: string
         }

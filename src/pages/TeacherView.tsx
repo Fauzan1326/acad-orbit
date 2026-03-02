@@ -1,13 +1,11 @@
 import { useAcademic } from '@/context/AcademicContext';
 import { TimetableGrid } from '@/components/TimetableGrid';
-import { TEACHERS } from '@/data/lookups';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SUBJECTS, TYPE_NAMES, SEMESTERS } from '@/data/lookups';
 import { motion } from 'framer-motion';
 
 export default function TeacherView() {
-  const { activeRecords } = useAcademic();
-  const activeTeachers = TEACHERS.filter(t => activeRecords.some(r => r.teacherCode === t.code));
+  const { activeRecords, teachers, subjects } = useAcademic();
+  const activeTeachers = teachers.filter(t => activeRecords.some(r => r.teacherCode === t.code));
 
   return (
     <div className="space-y-6">
@@ -16,7 +14,6 @@ export default function TeacherView() {
         <p className="text-sm text-muted-foreground mt-1">{activeTeachers.length} active faculty members</p>
       </div>
 
-      {/* Workload summary */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {activeTeachers.map(teacher => {
           const count = activeRecords.filter(r => r.teacherCode === teacher.code).length;
@@ -32,7 +29,6 @@ export default function TeacherView() {
         })}
       </div>
 
-      {/* Subject-Staff Assignment */}
       <div className="glass-card p-5">
         <h3 className="font-semibold text-sm mb-3">Subject–Staff Assignment</h3>
         <div className="overflow-x-auto">
@@ -49,17 +45,15 @@ export default function TeacherView() {
                 const assignments = new Map<string, { sem: number; sub: number; type: number; teacher: number; count: number }>();
                 activeRecords.forEach(r => {
                   const key = `${r.semesterCode}-${r.subjectCode}-${r.typeCode}-${r.teacherCode}`;
-                  if (!assignments.has(key)) {
-                    assignments.set(key, { sem: r.semesterCode, sub: r.subjectCode, type: r.typeCode, teacher: r.teacherCode, count: 0 });
-                  }
+                  if (!assignments.has(key)) assignments.set(key, { sem: r.semesterCode, sub: r.subjectCode, type: r.typeCode, teacher: r.teacherCode, count: 0 });
                   assignments.get(key)!.count++;
                 });
                 return Array.from(assignments.values()).sort((a, b) => a.sem - b.sem || a.sub - b.sub).map((a, i) => (
                   <tr key={i} className="border-b border-border/20 hover:bg-muted/20">
                     <td className="p-2">SEM {a.sem}</td>
-                    <td className="p-2">{SUBJECTS.find(s => s.code === a.sub)?.name}</td>
-                    <td className="p-2">{TYPE_NAMES[a.type]}</td>
-                    <td className="p-2">{TEACHERS.find(t => t.code === a.teacher)?.name}</td>
+                    <td className="p-2">{subjects.find(s => s.code === a.sub)?.name || `S${a.sub}`}</td>
+                    <td className="p-2">{a.type === 0 ? 'Theory' : 'Practical'}</td>
+                    <td className="p-2">{teachers.find(t => t.code === a.teacher)?.name || `T${a.teacher}`}</td>
                     <td className="p-2 font-medium">{a.count}</td>
                   </tr>
                 ));
@@ -69,26 +63,23 @@ export default function TeacherView() {
         </div>
       </div>
 
-      {/* Per-teacher timetables */}
-      <Tabs defaultValue={String(activeTeachers[0]?.code)} className="space-y-4">
-        <TabsList className="bg-secondary/50 flex-wrap h-auto">
-          {activeTeachers.map(t => (
-            <TabsTrigger key={t.code} value={String(t.code)}>{t.shortName}</TabsTrigger>
-          ))}
-        </TabsList>
-        {activeTeachers.map(teacher => {
-          const tRecords = activeRecords.filter(r => r.teacherCode === teacher.code);
-          return (
-            <TabsContent key={teacher.code} value={String(teacher.code)}>
-              <TimetableGrid
-                records={tRecords}
-                title={teacher.name}
-                subtitle={`${tRecords.length} slots/week`}
-              />
-            </TabsContent>
-          );
-        })}
-      </Tabs>
+      {activeTeachers.length > 0 && (
+        <Tabs defaultValue={String(activeTeachers[0]?.code)} className="space-y-4">
+          <TabsList className="bg-secondary/50 flex-wrap h-auto">
+            {activeTeachers.map(t => (
+              <TabsTrigger key={t.code} value={String(t.code)}>{t.shortName}</TabsTrigger>
+            ))}
+          </TabsList>
+          {activeTeachers.map(teacher => {
+            const tRecords = activeRecords.filter(r => r.teacherCode === teacher.code);
+            return (
+              <TabsContent key={teacher.code} value={String(teacher.code)}>
+                <TimetableGrid records={tRecords} title={teacher.name} subtitle={`${tRecords.length} slots/week`} />
+              </TabsContent>
+            );
+          })}
+        </Tabs>
+      )}
     </div>
   );
 }
