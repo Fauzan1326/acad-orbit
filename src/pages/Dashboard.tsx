@@ -1,5 +1,4 @@
 import { useAcademic } from '@/context/AcademicContext';
-import { SUBJECTS, TEACHERS, ROOMS, SEMESTERS } from '@/data/lookups';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, AlertTriangle, Calendar, Users,
@@ -31,7 +30,7 @@ function StatCard({ icon: Icon, label, value, accent, link }: {
 }
 
 export default function Dashboard() {
-  const { activeRecords, clashes, config, activeSemesters, masterRecords } = useAcademic();
+  const { activeRecords, clashes, config, activeSemesters, masterRecords, semesters } = useAcademic();
 
   const activeTeachers = new Set(activeRecords.map(r => r.teacherCode)).size;
   const activeRooms = new Set(activeRecords.map(r => r.roomCode)).size;
@@ -106,7 +105,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {SEMESTERS.map(sem => {
+        {semesters.map(sem => {
           const isActive = activeSemesters.includes(sem.code);
           const count = masterRecords.filter(r => r.semesterCode === sem.code).length;
           return (

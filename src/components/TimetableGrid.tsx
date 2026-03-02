@@ -1,6 +1,5 @@
 import type { TimetableRecord } from '@/types/academic';
 import { DAYS, SLOTS, SLOT_TIMES } from '@/types/academic';
-import { SUBJECTS, TEACHERS, ROOMS, TYPE_NAMES } from '@/data/lookups';
 import { useAcademic } from '@/context/AcademicContext';
 import {
   Tooltip, TooltipContent, TooltipTrigger
@@ -17,10 +16,10 @@ function getCellRecords(records: TimetableRecord[], day: string, slot: string) {
 }
 
 function RecordCell({ record }: { record: TimetableRecord }) {
-  const subject = SUBJECTS.find(s => s.code === record.subjectCode);
-  const teacher = TEACHERS.find(t => t.code === record.teacherCode);
-  const room = ROOMS.find(r => r.code === record.roomCode);
-  const { clashes } = useAcademic();
+  const { subjects, teachers, rooms, clashes } = useAcademic();
+  const subject = subjects.find(s => s.code === record.subjectCode);
+  const teacher = teachers.find(t => t.code === record.teacherCode);
+  const room = rooms.find(r => r.code === record.roomCode);
 
   const hasClash = clashes.some(c => c.records.some(r => r.id === record.id));
   const isPractical = record.typeCode === 1;
@@ -34,14 +33,14 @@ function RecordCell({ record }: { record: TimetableRecord }) {
           ${isPractical ? 'bg-primary/10 border border-primary/20' : 'bg-secondary/80 border border-border/30'}
         `}>
           <div className="font-semibold truncate">{subject?.shortName || `S${record.subjectCode}`}</div>
-          <div className="text-muted-foreground truncate">{teacher?.shortName} · {room?.name}</div>
+          <div className="text-muted-foreground truncate">{teacher?.shortName || `T${record.teacherCode}`} · {room?.name || `R${record.roomCode}`}</div>
           {record.batch !== 'A' && (
             <div className="text-muted-foreground">{record.batch}</div>
           )}
           <div className={`mt-0.5 inline-block px-1 py-px rounded text-[8px] font-medium ${
             isPractical ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
           }`}>
-            {TYPE_NAMES[record.typeCode]}
+            {record.typeCode === 0 ? 'Theory' : 'Practical'}
           </div>
         </div>
       </TooltipTrigger>
