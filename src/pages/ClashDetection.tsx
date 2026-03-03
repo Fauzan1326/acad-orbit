@@ -1,5 +1,5 @@
 import { useAcademic } from '@/context/AcademicContext';
-import { TEACHERS, ROOMS } from '@/data/lookups';
+
 import { motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
 
