@@ -6,8 +6,6 @@ import {
   useUpsertTimetableRecord, useDeleteTimetableRecord,
   type DbSubject, type DbTeacher, type DbRoom, type DbSemester, type DbTimetableRecord,
 } from '@/hooks/useDbData';
-import { DEMO_RECORDS } from '@/data/demo-data';
-import { SUBJECTS as STATIC_SUBJECTS, TEACHERS as STATIC_TEACHERS, ROOMS as STATIC_ROOMS, SEMESTERS as STATIC_SEMESTERS } from '@/data/lookups';
 
 interface AcademicContextType {
   config: AcademicConfig;
@@ -89,20 +87,16 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
 
   // Use DB data if available, otherwise fallback to static
   const subjects = useMemo(() =>
-    (dbSubjects && dbSubjects.length > 0) ? dbSubjects.map(s => ({ code: s.code, name: s.name, shortName: s.short_name }))
-    : STATIC_SUBJECTS, [dbSubjects]);
+    (dbSubjects || []).map(s => ({ code: s.code, name: s.name, shortName: s.short_name })), [dbSubjects]);
 
   const teachers = useMemo(() =>
-    (dbTeachers && dbTeachers.length > 0) ? dbTeachers.map(t => ({ code: t.code, name: t.name, shortName: t.short_name }))
-    : STATIC_TEACHERS, [dbTeachers]);
+    (dbTeachers || []).map(t => ({ code: t.code, name: t.name, shortName: t.short_name })), [dbTeachers]);
 
   const rooms = useMemo(() =>
-    (dbRooms && dbRooms.length > 0) ? dbRooms.map(r => ({ code: r.code, name: r.name, type: r.room_type }))
-    : STATIC_ROOMS.map(r => ({ code: r.code, name: r.name, type: r.type })), [dbRooms]);
+    (dbRooms || []).map(r => ({ code: r.code, name: r.name, type: r.room_type })), [dbRooms]);
 
   const semesters = useMemo(() =>
-    (dbSemesters && dbSemesters.length > 0) ? dbSemesters.map(s => ({ code: s.code, name: s.name, parity: s.parity }))
-    : STATIC_SEMESTERS.map(s => ({ code: s.code, name: s.name, parity: s.parity })), [dbSemesters]);
+    (dbSemesters || []).map(s => ({ code: s.code, name: s.name, parity: s.parity })), [dbSemesters]);
 
   const config: AcademicConfig = useMemo(() => {
     if (dbConfig) return {
@@ -143,7 +137,7 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
         termParity: semParity as TermParity, isActive: false,
         encodedId, humanReadable, notes: r.notes || '',
       };
-    }) : DEMO_RECORDS;
+    }) : [];
 
     return source.map(r => ({
       ...r,
