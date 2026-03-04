@@ -1,11 +1,19 @@
-import React, { createContext, useContext, useMemo, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useMemo, useCallback } from 'react';
 import type { TimetableRecord, Clash, TermParity, AcademicConfig } from '@/types/academic';
 import {
-  useSubjects, useTeachers, useRooms, useSemesters,
+  useSubjects, useTeachers, useRooms, useSemesters, useSlots,
   useTimetableRecords, useAcademicConfig, useUpsertAcademicConfig,
   useUpsertTimetableRecord, useDeleteTimetableRecord,
-  type DbSubject, type DbTeacher, type DbRoom, type DbSemester, type DbTimetableRecord,
+  type DbSubject, type DbTeacher, type DbRoom, type DbSemester, type DbTimetableRecord, type DbSlot,
 } from '@/hooks/useDbData';
+
+interface SlotInfo {
+  code: string;
+  label: string;
+  startTime: string;
+  endTime: string;
+  sortOrder: number;
+}
 
 interface AcademicContextType {
   config: AcademicConfig;
@@ -20,6 +28,7 @@ interface AcademicContextType {
   teachers: { code: number; name: string; shortName: string }[];
   rooms: { code: number; name: string; type: string }[];
   semesters: { code: number; name: string; parity: string }[];
+  slots: SlotInfo[];
   loading: boolean;
 }
 
@@ -47,21 +56,17 @@ function detectClashes(records: TimetableRecord[], rooms: { code: number; type: 
 
   groups.forEach((recs) => {
     if (recs.length < 2) return;
-    // Teacher clashes
     const teacherMap = new Map<number, TimetableRecord[]>();
     recs.forEach(r => { if (!teacherMap.has(r.teacherCode)) teacherMap.set(r.teacherCode, []); teacherMap.get(r.teacherCode)!.push(r); });
     teacherMap.forEach((trecs, tc) => { if (trecs.length > 1) clashes.push({ type: 'Teacher', message: `Teacher T${String(tc).padStart(2, '0')} has ${trecs.length} classes at ${trecs[0].day} ${trecs[0].slot}`, records: trecs, severity: 'error' }); });
-    // Room clashes
     const roomMap = new Map<number, TimetableRecord[]>();
     recs.forEach(r => { if (!roomMap.has(r.roomCode)) roomMap.set(r.roomCode, []); roomMap.get(r.roomCode)!.push(r); });
     roomMap.forEach((rrecs, rc) => { if (rrecs.length > 1) clashes.push({ type: 'Room', message: `Room R${rc} has ${rrecs.length} classes at ${rrecs[0].day} ${rrecs[0].slot}`, records: rrecs, severity: 'error' }); });
-    // Semester clashes
     const semMap = new Map<number, TimetableRecord[]>();
     recs.forEach(r => { if (!semMap.has(r.semesterCode)) semMap.set(r.semesterCode, []); semMap.get(r.semesterCode)!.push(r); });
     semMap.forEach((srecs) => { if (srecs.length > 1) clashes.push({ type: 'Semester', message: `Semester ${srecs[0].semesterCode} has ${srecs.length} classes at ${srecs[0].day} ${srecs[0].slot}`, records: srecs, severity: 'error' }); });
   });
 
-  // Room rule
   active.forEach(r => {
     const room = rooms.find(rm => rm.code === r.roomCode);
     if (!room) return;
@@ -77,15 +82,15 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
   const { data: dbTeachers, isLoading: loadingTeach } = useTeachers();
   const { data: dbRooms, isLoading: loadingRoom } = useRooms();
   const { data: dbSemesters, isLoading: loadingSem } = useSemesters();
+  const { data: dbSlots, isLoading: loadingSlots } = useSlots();
   const { data: dbRecords, isLoading: loadingRec } = useTimetableRecords();
   const { data: dbConfig, isLoading: loadingConf } = useAcademicConfig();
   const upsertConfig = useUpsertAcademicConfig();
   const upsertRecord = useUpsertTimetableRecord();
   const deleteRecordMut = useDeleteTimetableRecord();
 
-  const loading = loadingSub || loadingTeach || loadingRoom || loadingSem || loadingRec || loadingConf;
+  const loading = loadingSub || loadingTeach || loadingRoom || loadingSem || loadingSlots || loadingRec || loadingConf;
 
-  // Use DB data if available, otherwise fallback to static
   const subjects = useMemo(() =>
     (dbSubjects || []).map(s => ({ code: s.code, name: s.name, shortName: s.short_name })), [dbSubjects]);
 
@@ -97,6 +102,9 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
 
   const semesters = useMemo(() =>
     (dbSemesters || []).map(s => ({ code: s.code, name: s.name, parity: s.parity })), [dbSemesters]);
+
+  const slots: SlotInfo[] = useMemo(() =>
+    (dbSlots || []).map(s => ({ code: s.code, label: s.label, startTime: s.start_time, endTime: s.end_time, sortOrder: s.sort_order })), [dbSlots]);
 
   const config: AcademicConfig = useMemo(() => {
     if (dbConfig) return {
@@ -120,7 +128,6 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
 
   const activeSemesters = useMemo(() => getActiveSemesters(config.activeTerm, semesters), [config.activeTerm, semesters]);
 
-  // Build TimetableRecord objects from DB or static
   const masterRecords = useMemo(() => {
     const source: TimetableRecord[] = (dbRecords && dbRecords.length > 0) ? dbRecords.map(r => {
       const sub = subjects.find(s => s.code === r.subject_code);
@@ -165,7 +172,7 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
     <AcademicContext.Provider value={{
       config, setConfig, masterRecords, activeRecords, clashes,
       activeSemesters, addRecord, deleteRecord,
-      subjects, teachers, rooms, semesters, loading,
+      subjects, teachers, rooms, semesters, slots, loading,
     }}>
       {children}
     </AcademicContext.Provider>

@@ -128,6 +128,39 @@ export type Database = {
         }
         Relationships: []
       }
+      slots: {
+        Row: {
+          code: string
+          created_at: string
+          end_time: string
+          id: string
+          label: string
+          sort_order: number
+          start_time: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          end_time: string
+          id?: string
+          label: string
+          sort_order?: number
+          start_time: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          label?: string
+          sort_order?: number
+          start_time?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subjects: {
         Row: {
           code: number
