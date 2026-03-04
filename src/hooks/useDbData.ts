@@ -8,6 +8,7 @@ export interface DbSubject { id: string; code: number; name: string; short_name:
 export interface DbTeacher { id: string; code: number; name: string; short_name: string; user_id: string; }
 export interface DbRoom { id: string; code: number; name: string; room_type: string; user_id: string; }
 export interface DbSemester { id: string; code: number; name: string; parity: string; user_id: string; }
+export interface DbSlot { id: string; code: string; label: string; start_time: string; end_time: string; sort_order: number; user_id: string; }
 export interface DbTimetableRecord {
   id: string; day: string; slot: string; semester_code: number; type_code: number;
   room_code: number; subject_code: number; teacher_code: number;
@@ -195,6 +196,51 @@ export function useDeleteSemester() {
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['semesters'] }); toast.success('Semester deleted'); },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
+// ========== SLOTS ==========
+export function useSlots() {
+  const userId = useUserId();
+  return useQuery({
+    queryKey: ['slots', userId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).from('slots').select('*').order('sort_order');
+      if (error) throw error;
+      return data as DbSlot[];
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useUpsertSlot() {
+  const qc = useQueryClient();
+  const userId = useUserId();
+  return useMutation({
+    mutationFn: async (s: { id?: string; code: string; label: string; start_time: string; end_time: string; sort_order: number }) => {
+      if (s.id) {
+        const { id, ...rest } = s;
+        const { error } = await (supabase as any).from('slots').update(rest).eq('id', id);
+        if (error) throw error;
+      } else {
+        const { error } = await (supabase as any).from('slots').insert({ ...s, user_id: userId! });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['slots'] }); toast.success('Slot saved'); },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
+export function useDeleteSlot() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).from('slots').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['slots'] }); toast.success('Slot deleted'); },
     onError: (e: any) => toast.error(e.message),
   });
 }

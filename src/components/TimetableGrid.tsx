@@ -1,5 +1,5 @@
 import type { TimetableRecord } from '@/types/academic';
-import { DAYS, SLOTS, SLOT_TIMES } from '@/types/academic';
+import { DAYS } from '@/types/academic';
 import { useAcademic } from '@/context/AcademicContext';
 import {
   Tooltip, TooltipContent, TooltipTrigger
@@ -56,6 +56,8 @@ function RecordCell({ record }: { record: TimetableRecord }) {
 }
 
 export function TimetableGrid({ records, title, subtitle }: TimetableGridProps) {
+  const { slots } = useAcademic();
+
   return (
     <div className="glass-card overflow-hidden">
       <div className="p-4 border-b border-border/30">
@@ -67,10 +69,10 @@ export function TimetableGrid({ records, title, subtitle }: TimetableGridProps) 
           <thead>
             <tr>
               <th className="timetable-header w-16">Day</th>
-              {SLOTS.map(slot => (
-                <th key={slot} className="timetable-header">
-                  <div>{slot}</div>
-                  <div className="text-[9px] font-normal opacity-70">{SLOT_TIMES[slot]}</div>
+              {slots.map(slot => (
+                <th key={slot.code} className="timetable-header">
+                  <div>{slot.code}</div>
+                  <div className="text-[9px] font-normal opacity-70">{slot.startTime} - {slot.endTime}</div>
                 </th>
               ))}
             </tr>
@@ -79,10 +81,10 @@ export function TimetableGrid({ records, title, subtitle }: TimetableGridProps) 
             {DAYS.map(day => (
               <tr key={day}>
                 <td className="timetable-header font-medium text-center">{day}</td>
-                {SLOTS.map(slot => {
-                  const cellRecs = getCellRecords(records, day, slot);
+                {slots.map(slot => {
+                  const cellRecs = getCellRecords(records, day, slot.code);
                   return (
-                    <td key={slot} className="timetable-cell align-top min-w-[100px]">
+                    <td key={slot.code} className="timetable-cell align-top min-w-[100px]">
                       <div className="space-y-1">
                         {cellRecs.map(rec => (
                           <RecordCell key={rec.id} record={rec} />
