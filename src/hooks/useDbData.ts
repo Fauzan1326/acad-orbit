@@ -262,38 +262,19 @@ export function useTimetableRecords() {
 export function useUpsertTimetableRecord() {
   const qc = useQueryClient();
   const userId = useUserId();
-
   return useMutation({
-    mutationFn: async (r: any) => {
-      const encodedId = `${String(r.semester_code).padStart(2, '0')}-${r.type_code}-${r.room_code}-${r.subject_code}-${String(r.teacher_code).padStart(2, '0')}`;
-
+    mutationFn: async (r: Omit<DbTimetableRecord, 'user_id'> & { id?: string }) => {
       if (r.id) {
         const { id, ...rest } = r;
-
-        const { error } = await supabase
-          .from('timetable_records')
-          .update({ ...rest, encoded_id: encodedId })
-          .eq('id', id);
-
+        const { error } = await supabase.from('timetable_records').update(rest).eq('id', id);
         if (error) throw error;
       } else {
         const { id, ...rest } = r;
-
-        const { error } = await supabase
-          .from('timetable_records')
-          .insert({
-            ...rest,
-            encoded_id: encodedId,
-            user_id: userId!
-          });
-
+        const { error } = await supabase.from('timetable_records').insert({ ...rest, user_id: userId! });
         if (error) throw error;
       }
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['timetable_records'] });
-      toast.success('Record saved');
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['timetable_records'] }); toast.success('Record saved'); },
     onError: (e: any) => toast.error(e.message),
   });
 }

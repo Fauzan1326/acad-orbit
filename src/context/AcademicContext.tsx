@@ -4,16 +4,6 @@ import {
   useSubjects, useTeachers, useRooms, useSemesters, useSlots,
   useTimetableRecords, useAcademicConfig, useUpsertAcademicConfig,
   useUpsertTimetableRecord, useDeleteTimetableRecord,
-<<<<<<< HEAD
-} from '@/hooks/useDbData';
-import { DEMO_RECORDS } from '@/data/demo-data';
-import {
-  SUBJECTS as STATIC_SUBJECTS,
-  TEACHERS as STATIC_TEACHERS,
-  ROOMS as STATIC_ROOMS,
-  SEMESTERS as STATIC_SEMESTERS
-} from '@/data/lookups';
-=======
   type DbSubject, type DbTeacher, type DbRoom, type DbSemester, type DbTimetableRecord, type DbSlot,
 } from '@/hooks/useDbData';
 
@@ -24,7 +14,6 @@ interface SlotInfo {
   endTime: string;
   sortOrder: number;
 }
->>>>>>> 442a293e6b2e49e25fb342c4c5c7b2664d924c1b
 
 interface AcademicContextType {
   config: AcademicConfig;
@@ -51,10 +40,7 @@ export function useAcademic() {
   return ctx;
 }
 
-function getActiveSemesters(
-  parity: TermParity,
-  semesters: { code: number; parity: string }[]
-): number[] {
+function getActiveSemesters(parity: TermParity, semesters: { code: number; parity: string }[]): number[] {
   return semesters.filter(s => s.parity === parity).map(s => s.code);
 }
 
@@ -62,62 +48,14 @@ function detectClashes(records: TimetableRecord[], rooms: { code: number; type: 
   const clashes: Clash[] = [];
   const active = records.filter(r => r.isActive);
   const groups = new Map<string, TimetableRecord[]>();
-
   active.forEach(r => {
     const key = `${r.day}-${r.slot}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(r);
   });
 
-  groups.forEach(recs => {
+  groups.forEach((recs) => {
     if (recs.length < 2) return;
-<<<<<<< HEAD
-
-    const teacherMap = new Map<number, TimetableRecord[]>();
-    recs.forEach(r => {
-      if (!teacherMap.has(r.teacherCode)) teacherMap.set(r.teacherCode, []);
-      teacherMap.get(r.teacherCode)!.push(r);
-    });
-    teacherMap.forEach((t, tc) => {
-      if (t.length > 1)
-        clashes.push({
-          type: 'Teacher',
-          message: `Teacher T${String(tc).padStart(2, '0')} has ${t.length} classes at ${t[0].day} ${t[0].slot}`,
-          records: t,
-          severity: 'error'
-        });
-    });
-
-    const roomMap = new Map<number, TimetableRecord[]>();
-    recs.forEach(r => {
-      if (!roomMap.has(r.roomCode)) roomMap.set(r.roomCode, []);
-      roomMap.get(r.roomCode)!.push(r);
-    });
-    roomMap.forEach((r, rc) => {
-      if (r.length > 1)
-        clashes.push({
-          type: 'Room',
-          message: `Room R${rc} has ${r.length} classes at ${r[0].day} ${r[0].slot}`,
-          records: r,
-          severity: 'error'
-        });
-    });
-
-    const semMap = new Map<number, TimetableRecord[]>();
-    recs.forEach(r => {
-      if (!semMap.has(r.semesterCode)) semMap.set(r.semesterCode, []);
-      semMap.get(r.semesterCode)!.push(r);
-    });
-    semMap.forEach(s => {
-      if (s.length > 1)
-        clashes.push({
-          type: 'Semester',
-          message: `Semester ${s[0].semesterCode} has ${s.length} classes at ${s[0].day} ${s[0].slot}`,
-          records: s,
-          severity: 'error'
-        });
-    });
-=======
     const teacherMap = new Map<number, TimetableRecord[]>();
     recs.forEach(r => { if (!teacherMap.has(r.teacherCode)) teacherMap.set(r.teacherCode, []); teacherMap.get(r.teacherCode)!.push(r); });
     teacherMap.forEach((trecs, tc) => { if (trecs.length > 1) clashes.push({ type: 'Teacher', message: `Teacher T${String(tc).padStart(2, '0')} has ${trecs.length} classes at ${trecs[0].day} ${trecs[0].slot}`, records: trecs, severity: 'error' }); });
@@ -134,7 +72,6 @@ function detectClashes(records: TimetableRecord[], rooms: { code: number; type: 
     if (!room) return;
     if (r.typeCode === 0 && room.type === 'Lab') clashes.push({ type: 'RoomRule', message: `Theory class in Lab: ${r.humanReadable}`, records: [r], severity: 'warning' });
     if (r.typeCode === 1 && room.type === 'Classroom') clashes.push({ type: 'RoomRule', message: `Practical in Classroom: ${r.humanReadable}`, records: [r], severity: 'warning' });
->>>>>>> 442a293e6b2e49e25fb342c4c5c7b2664d924c1b
   });
 
   return clashes;
@@ -148,49 +85,12 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
   const { data: dbSlots, isLoading: loadingSlots } = useSlots();
   const { data: dbRecords, isLoading: loadingRec } = useTimetableRecords();
   const { data: dbConfig, isLoading: loadingConf } = useAcademicConfig();
-
   const upsertConfig = useUpsertAcademicConfig();
   const upsertRecord = useUpsertTimetableRecord();
   const deleteRecordMut = useDeleteTimetableRecord();
 
   const loading = loadingSub || loadingTeach || loadingRoom || loadingSem || loadingSlots || loadingRec || loadingConf;
 
-<<<<<<< HEAD
-  // 🇮🇳 GLOBAL INDIA TIME
-  const indiaTime = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-  );
-
-  const currentMonth = indiaTime.getMonth() + 1;
-  const currentDate = indiaTime.toISOString();
-
-  const isCurrentMonth = (recordMonth: number) =>
-    recordMonth === currentMonth;
-
-  const subjects = useMemo(() =>
-    dbSubjects?.length ? dbSubjects.map(s => ({ code: s.code, name: s.name, shortName: s.short_name })) : STATIC_SUBJECTS,
-    [dbSubjects]
-  );
-
-  const teachers = useMemo(() =>
-    dbTeachers?.length ? dbTeachers.map(t => ({ code: t.code, name: t.name, shortName: t.short_name })) : STATIC_TEACHERS,
-    [dbTeachers]
-  );
-
-  const rooms = useMemo(() =>
-    dbRooms?.length
-      ? dbRooms.map(r => ({ code: r.code, name: r.name, type: r.room_type }))
-      : STATIC_ROOMS.map(r => ({ code: r.code, name: r.name, type: r.type })),
-    [dbRooms]
-  );
-
-  const semesters = useMemo(() =>
-    dbSemesters?.length
-      ? dbSemesters.map(s => ({ code: s.code, name: s.name, parity: s.parity }))
-      : STATIC_SEMESTERS.map(s => ({ code: s.code, name: s.name, parity: s.parity })),
-    [dbSemesters]
-  );
-=======
   const subjects = useMemo(() =>
     (dbSubjects || []).map(s => ({ code: s.code, name: s.name, shortName: s.short_name })), [dbSubjects]);
 
@@ -205,34 +105,16 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
 
   const slots: SlotInfo[] = useMemo(() =>
     (dbSlots || []).map(s => ({ code: s.code, label: s.label, startTime: s.start_time, endTime: s.end_time, sortOrder: s.sort_order })), [dbSlots]);
->>>>>>> 442a293e6b2e49e25fb342c4c5c7b2664d924c1b
 
-  // ✅ TERM BASED ON MONTH
   const config: AcademicConfig = useMemo(() => {
-    const activeTerm: TermParity = currentMonth >= 6 ? 'Odd' : 'Even';
-
-    const year = indiaTime.getFullYear();
-    const academicYear =
-      currentMonth >= 6
-        ? `${year}-${(year + 1).toString().slice(-2)}`
-        : `${year - 1}-${year.toString().slice(-2)}`;
-
-    if (dbConfig) {
-      return {
-        activeTerm,
-        academicYear,
-        startDate: dbConfig.start_date || '',
-        endDate: dbConfig.end_date || '',
-      };
-    }
-
-    return {
-      activeTerm,
-      academicYear,
-      startDate: '',
-      endDate: '',
+    if (dbConfig) return {
+      activeTerm: dbConfig.active_term as TermParity,
+      academicYear: dbConfig.academic_year,
+      startDate: dbConfig.start_date || '',
+      endDate: dbConfig.end_date || '',
     };
-  }, [dbConfig, currentMonth]);
+    return { activeTerm: 'Odd', academicYear: '2025-26', startDate: '2025-07-01', endDate: '2025-12-15' };
+  }, [dbConfig]);
 
   const setConfig = useCallback((newConfig: AcademicConfig) => {
     upsertConfig.mutate({
@@ -244,15 +126,9 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
     });
   }, [dbConfig, upsertConfig]);
 
-  const activeSemesters = useMemo(
-    () => getActiveSemesters(config.activeTerm, semesters),
-    [config.activeTerm, semesters]
-  );
+  const activeSemesters = useMemo(() => getActiveSemesters(config.activeTerm, semesters), [config.activeTerm, semesters]);
 
   const masterRecords = useMemo(() => {
-<<<<<<< HEAD
-    const source = dbRecords?.length ? dbRecords : DEMO_RECORDS;
-=======
     const source: TimetableRecord[] = (dbRecords && dbRecords.length > 0) ? dbRecords.map(r => {
       const sub = subjects.find(s => s.code === r.subject_code);
       const teach = teachers.find(t => t.code === r.teacher_code);
@@ -269,39 +145,34 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
         encodedId, humanReadable, notes: r.notes || '',
       };
     }) : [];
->>>>>>> 442a293e6b2e49e25fb342c4c5c7b2664d924c1b
 
-    return source.map((r: any) => ({
+    return source.map(r => ({
       ...r,
-      semesterCode: r.semester_code || r.semesterCode,
-      isActive: activeSemesters.includes(r.semester_code || r.semesterCode),
+      isActive: activeSemesters.includes(r.semesterCode),
     }));
-  }, [dbRecords, activeSemesters]);
+  }, [dbRecords, subjects, teachers, rooms, semesters, activeSemesters]);
 
   const activeRecords = useMemo(() => masterRecords.filter(r => r.isActive), [masterRecords]);
-  const clashes = useMemo(() => detectClashes(masterRecords as any, rooms), [masterRecords, rooms]);
+  const clashes = useMemo(() => detectClashes(masterRecords, rooms), [masterRecords, rooms]);
+
+  const addRecord = useCallback((record: TimetableRecord) => {
+    upsertRecord.mutate({
+      day: record.day, slot: record.slot, semester_code: record.semesterCode,
+      type_code: record.typeCode, room_code: record.roomCode,
+      subject_code: record.subjectCode, teacher_code: record.teacherCode,
+      batch: record.batch, duration: record.duration, notes: record.notes,
+    } as any);
+  }, [upsertRecord]);
+
+  const deleteRecord = useCallback((id: string) => {
+    deleteRecordMut.mutate(id);
+  }, [deleteRecordMut]);
 
   return (
     <AcademicContext.Provider value={{
-<<<<<<< HEAD
-      config,
-      setConfig,
-      masterRecords,
-      activeRecords,
-      clashes,
-      activeSemesters,
-      addRecord: () => {},
-      deleteRecord: () => {},
-      subjects,
-      teachers,
-      rooms,
-      semesters,
-      loading,
-=======
       config, setConfig, masterRecords, activeRecords, clashes,
       activeSemesters, addRecord, deleteRecord,
       subjects, teachers, rooms, semesters, slots, loading,
->>>>>>> 442a293e6b2e49e25fb342c4c5c7b2664d924c1b
     }}>
       {children}
     </AcademicContext.Provider>
