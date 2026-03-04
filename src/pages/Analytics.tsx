@@ -1,17 +1,17 @@
 import { useAcademic } from '@/context/AcademicContext';
-import { DAYS, SLOTS } from '@/types/academic';
+import { DAYS } from '@/types/academic';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const CHART_COLORS = ['hsl(187, 85%, 47%)', 'hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(0, 72%, 51%)', 'hsl(280, 70%, 50%)', 'hsl(210, 70%, 50%)'];
 
 export default function Analytics() {
-  const { activeRecords, clashes, activeSemesters, teachers, rooms } = useAcademic();
+  const { activeRecords, clashes, activeSemesters, teachers, rooms, slots } = useAcademic();
 
   const teacherWorkload = teachers
     .map(t => ({ name: t.shortName, slots: activeRecords.filter(r => r.teacherCode === t.code).length }))
     .filter(t => t.slots > 0).sort((a, b) => b.slots - a.slots);
 
-  const totalSlots = DAYS.length * SLOTS.length;
+  const totalSlots = DAYS.length * slots.length;
   const roomUtil = rooms.map(room => ({
     name: room.name,
     used: activeRecords.filter(r => r.roomCode === room.code).length,

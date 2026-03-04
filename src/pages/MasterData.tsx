@@ -8,28 +8,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
-import { DAYS, SLOTS } from '@/types/academic';
-import type { TimetableRecord, DayCode, SlotCode, TypeCode } from '@/types/academic';
+import { DAYS } from '@/types/academic';
+import type { TimetableRecord, DayCode, TypeCode } from '@/types/academic';
 
 function AddRecordDialog() {
-  const { subjects, teachers, rooms, semesters, addRecord } = useAcademic();
+  const { subjects, teachers, rooms, semesters, slots, addRecord } = useAcademic();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
-    day: 'Mon', slot: 'P1', semesterCode: '', typeCode: '0',
+    day: 'Mon', slot: '', semesterCode: '', typeCode: '0',
     roomCode: '', subjectCode: '', teacherCode: '', batch: 'A', duration: '1', notes: '',
   });
 
   const handleSave = () => {
-    if (!form.semesterCode || !form.roomCode || !form.subjectCode || !form.teacherCode) return;
+    if (!form.semesterCode || !form.roomCode || !form.subjectCode || !form.teacherCode || !form.slot) return;
     addRecord({
-      id: '', day: form.day as DayCode, slot: form.slot as SlotCode,
+      id: '', day: form.day as DayCode, slot: form.slot as any,
       semesterCode: parseInt(form.semesterCode), typeCode: parseInt(form.typeCode) as TypeCode,
       roomCode: parseInt(form.roomCode), subjectCode: parseInt(form.subjectCode),
       teacherCode: parseInt(form.teacherCode), batch: form.batch, duration: parseInt(form.duration),
       termParity: 'Odd', isActive: false, encodedId: '', humanReadable: '', notes: form.notes,
     });
     setOpen(false);
-    setForm({ day: 'Mon', slot: 'P1', semesterCode: '', typeCode: '0', roomCode: '', subjectCode: '', teacherCode: '', batch: 'A', duration: '1', notes: '' });
+    setForm({ day: 'Mon', slot: '', semesterCode: '', typeCode: '0', roomCode: '', subjectCode: '', teacherCode: '', batch: 'A', duration: '1', notes: '' });
   };
 
   return (
@@ -50,8 +50,8 @@ function AddRecordDialog() {
           <div>
             <Label className="text-xs">Slot</Label>
             <Select value={form.slot} onValueChange={v => setForm({ ...form, slot: v })}>
-              <SelectTrigger className="mt-1 text-xs bg-secondary/50"><SelectValue /></SelectTrigger>
-              <SelectContent>{SLOTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              <SelectTrigger className="mt-1 text-xs bg-secondary/50"><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>{slots.map(s => <SelectItem key={s.code} value={s.code}>{s.code} ({s.startTime}-{s.endTime})</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div>
